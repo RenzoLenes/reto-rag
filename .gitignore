@@ -1,0 +1,53 @@
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Entornos de Python
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+.venv/
+venv/
+ENV/
+env/
+
+# Entornos virtuales / configuraciones locales
+*.env
+
+.env.*
+*.local
+*.secret
+
+# Logs
+*.log
+logs/
+*.out
+
+# IDEs y editores
+.vscode/
+.idea/
+*.swp
+*.swo
+*.iml
+
+
+# Archivos temporales
+*.tmp
+*.temp
+*.pid
+*.seed
+*.lock
+
+# Otros
+coverage/
+htmlcov/
+.tox/
+.mypy_cache/
+.pytest_cache/
