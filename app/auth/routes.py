@@ -1,7 +1,10 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Depends
+from typing import Dict
 from auth.models import UserCreate, UserLogin, UserOut, TokenResponse
 from auth.service import auth_service
-from schemas.responses import ErrorResponse
+from core.security import get_current_user
+from db.astra_client import astra_client
+from schemas.responses import ErrorResponse, UserResponse
 
 router = APIRouter(
     prefix="/auth", 
@@ -70,3 +73,35 @@ async def login(login_data: UserLogin):
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=str(e)
         )
+
+
+@router.get(
+    "/user",
+    response_model=UserResponse,
+    summary="Get Current User",
+    description="Get information about the currently authenticated user"
+)
+async def get_current_user_info(current_user: Dict[str, str] = Depends(get_current_user)):
+    """
+    Get current user information.
+    
+    Args:
+        current_user: Authenticated user information (injected by dependency)
+        
+    Returns:
+        UserResponse: User information (userId and email)
+        
+    Raises:
+        HTTPException: 404 if user not found
+    """
+    user = astra_client.get_user_by_id(current_user["userId"])
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    
+    return UserResponse(
+        userId=user["userId"],
+        email=user["email"]
+    )

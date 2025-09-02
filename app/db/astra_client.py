@@ -109,6 +109,10 @@ class AstraDBClient:
         result = self.users_collection.find_one({"email": email})
         return result
 
+    def get_user_by_id(self, user_id: str) -> Optional[Dict[str, Any]]:
+        result = self.users_collection.find_one({"userId": user_id})
+        return result
+
     def create_session(self, session_data: Dict[str, Any]) -> Dict[str, Any]:
         result = self.sessions_collection.insert_one(session_data)
         return result
@@ -123,9 +127,28 @@ class AstraDBClient:
         )
         return result
 
+    def update_session_name(self, session_id: str, user_id: str, new_name: str) -> bool:
+        """Update session name"""
+        try:
+            result = self.sessions_collection.update_one(
+                {"sessionId": session_id, "userId": user_id},
+                {"$set": {"name": new_name}}
+            )
+            return result
+        except Exception as e:
+            logger.error(f"Error updating session {session_id}: {e}")
+            return False
+
     def create_document(self, document_data: Dict[str, Any]) -> Dict[str, Any]:
         result = self.documents_collection.insert_one(document_data)
         return result
+
+    def get_session_documents(self, session_id: str, user_id: str) -> List[Dict[str, Any]]:
+        """Get all documents for a specific session"""
+        cursor = self.documents_collection.find(
+            {"sessionId": session_id, "userId": user_id}
+        ).sort({"uploadedAt": -1})  # Most recent first
+        return list(cursor)
 
     def insert_embeddings(self, embeddings_data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         result = self.embeddings_collection.insert_many(embeddings_data)
@@ -146,6 +169,51 @@ class AstraDBClient:
             {"sessionId": session_id, "userId": user_id}
         ).sort({"createdAt": 1})
         return list(cursor)
+
+    def delete_session(self, session_id: str, user_id: str) -> bool:
+        """Delete a session and all related data"""
+        try:
+            # Delete the session itself
+            result = self.sessions_collection.delete_one(
+                {"sessionId": session_id, "userId": user_id}
+            )
+            return result.deleted_count > 0
+        except Exception as e:
+            logger.error(f"Error deleting session {session_id}: {e}")
+            return False
+
+    def delete_session_documents(self, session_id: str, user_id: str) -> int:
+        """Delete all documents for a session"""
+        try:
+            result = self.documents_collection.delete_many(
+                {"sessionId": session_id, "userId": user_id}
+            )
+            return result.deleted_count
+        except Exception as e:
+            logger.error(f"Error deleting documents for session {session_id}: {e}")
+            return 0
+
+    def delete_session_embeddings(self, session_id: str, user_id: str) -> int:
+        """Delete all embeddings for a session"""
+        try:
+            result = self.embeddings_collection.delete_many(
+                {"metadata.sessionId": session_id, "metadata.userId": user_id}
+            )
+            return result.deleted_count
+        except Exception as e:
+            logger.error(f"Error deleting embeddings for session {session_id}: {e}")
+            return 0
+
+    def delete_session_messages(self, session_id: str, user_id: str) -> int:
+        """Delete all messages for a session"""
+        try:
+            result = self.messages_collection.delete_many(
+                {"sessionId": session_id, "userId": user_id}
+            )
+            return result.deleted_count
+        except Exception as e:
+            logger.error(f"Error deleting messages for session {session_id}: {e}")
+            return 0
 
 
 # Global instance

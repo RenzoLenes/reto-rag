@@ -1,0 +1,81 @@
+# ================================
+# Docker Compose for RAG Chatbot
+# ================================
+
+version: '3.8'
+
+services:
+  # ================================
+  # RAG Chatbot API Service
+  # ================================
+  rag-chatbot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: rag-chatbot-api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - APP_ENV=production
+      - APP_PORT=8000
+    env_file:
+      - .env
+    volumes:
+      # Mount logs directory for persistence
+      - ./logs:/app/logs
+    networks:
+      - rag-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.0'
+        reservations:
+          memory: 512M
+          cpus: '0.5'
+
+  # ================================
+  # Nginx Reverse Proxy (Optional)
+  # ================================
+  nginx:
+    image: nginx:alpine
+    container_name: rag-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      rag-chatbot:
+        condition: service_healthy
+    networks:
+      - rag-network
+    profiles:
+      - production
+
+# ================================
+# Networks
+# ================================
+networks:
+  rag-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+# ================================
+# Volumes
+# ================================
+volumes:
+  logs:
+    driver: local
