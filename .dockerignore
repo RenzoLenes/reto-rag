@@ -1,92 +1,53 @@
-# ================================
-# Docker ignore file for RAG Chatbot
-# ================================
+# Entornos virtuales
+venv/
+env/
+.venv/
+.env
 
-# Git
-.git
-.gitignore
-.gitattributes
-
-# Documentation
-README.md
-docs/
-*.md
-
-# Python
+# Archivos de Python
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
-env/
-venv/
-ENV/
-.env.local
-.env.*.local
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
 
-# Testing
-.pytest_cache/
-.coverage
-htmlcov/
-.tox/
-.cache
-.mypy_cache/
-.dmypy.json
-dmypy.json
+# Archivos de desarrollo
+.git/
+.gitignore
+README.md
+Dockerfile
+.dockerignore
+docker-compose.yml
 
-# IDEs
+# Archivos de IDE
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
 
-# OS
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-
 # Logs
-logs/
 *.log
 
-# Runtime data
-pids/
-*.pid
-*.seed
-*.pid.lock
-
-# Coverage directory used by tools like istanbul
-coverage/
-
-# Build artifacts
-build/
-dist/
-*.egg-info/
-
-# Docker
-Dockerfile*
-.dockerignore
-docker-compose*.yml
-
-# Local development
-.env.development
-.env.local
-node_modules/
-
-# Temporary files
-tmp/
-temp/
+# Archivos temporales
 *.tmp
+*.temp
 
-# Database
-*.db
-*.sqlite3
-
-# Backup files
-*.backup
-*.bak
+# Archivos de sistema
+.DS_Store
+Thumbs.db

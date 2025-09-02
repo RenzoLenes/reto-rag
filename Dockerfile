@@ -1,31 +1,39 @@
-# Imagen base liviana
+# Usar Python 3.11 slim como imagen base para optimizar el tamaño
 FROM python:3.11-slim
 
-# Variables de entorno
-ENV PYTHONUNBUFFERED=1 \
-    PIP_NO_CACHE_DIR=1
+# Establecer variables de entorno
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONPATH=/app
 
-# Crear directorio de la app
-WORKDIR /app
-
-# Instalar dependencias del sistema mínimas
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl \
-    build-essential \
-    && apt-get clean \
+# Instalar dependencias del sistema necesarias
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    libffi-dev \
+    libssl-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Copiar dependencias primero (cache eficiente)
+# Establecer el directorio de trabajo
+WORKDIR /app
+
+# Copiar archivos de dependencias primero para aprovechar la caché de Docker
 COPY requirements.txt .
 
 # Instalar dependencias de Python
-RUN pip install --upgrade pip && pip install -r requirements.txt
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
 
-# Copiar código de la app
+# Copiar el código de la aplicación
 COPY . .
 
-# Exponer puerto
+# Crear usuario no-root para seguridad
+RUN adduser --disabled-password --gecos '' appuser && \
+    chown -R appuser:appuser /app
+USER appuser
+
+# Exponer el puerto 8000
 EXPOSE 8000
 
-# Comando por defecto
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Comando para ejecutar la aplicación
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

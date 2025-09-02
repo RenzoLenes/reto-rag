@@ -5,16 +5,9 @@
 version: '3.8'
 
 services:
-  # ================================
-  # RAG Chatbot API Service
-  # ================================
-  rag-chatbot:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: production
-    container_name: rag-chatbot-api
-    restart: unless-stopped
+  backend:
+    build: .
+    container_name: rag-chatbot-backend
     ports:
       - "8000:8000"
     environment:
@@ -23,59 +16,40 @@ services:
     env_file:
       - .env
     volumes:
-      # Mount logs directory for persistence
-      - ./logs:/app/logs
+      - ./documents:/app/documents
     networks:
       - rag-network
+    restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
-    deploy:
-      resources:
-        limits:
-          memory: 2G
-          cpus: '1.0'
-        reservations:
-          memory: 512M
-          cpus: '0.5'
 
-  # ================================
-  # Nginx Reverse Proxy (Optional)
-  # ================================
-  nginx:
-    image: nginx:alpine
-    container_name: rag-nginx
-    restart: unless-stopped
+  frontend:
+    image: node:18-alpine
+    container_name: rag-chatbot-frontend
+    working_dir: /app
     ports:
-      - "80:80"
-      - "443:443"
+      - "3000:3000"
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./ssl:/etc/nginx/ssl:ro
-    depends_on:
-      rag-chatbot:
-        condition: service_healthy
+      - ../frontend:/app
+      - /app/node_modules
     networks:
       - rag-network
-    profiles:
-      - production
+    restart: unless-stopped
+    command: >
+      sh -c "npm install && npm start"
+    environment:
+      - REACT_APP_API_URL=http://localhost:8000
+      - CHOKIDAR_USEPOLLING=true
+    depends_on:
+      - backend
 
-# ================================
-# Networks
-# ================================
 networks:
   rag-network:
     driver: bridge
-    ipam:
-      config:
-        - subnet: 172.20.0.0/16
 
-# ================================
-# Volumes
-# ================================
 volumes:
-  logs:
-    driver: local
+  documents:

@@ -32,7 +32,7 @@ class Settings(BaseSettings):
 
     class Config:
         # Find .env file in parent directory of app
-        env_file = Path(__file__).parent.parent.parent / ".env"
+        env_file = ".env"
         case_sensitive = False
 
 
